@@ -8,9 +8,11 @@ logging.basicConfig(level=logging.INFO)
 LOG = logging.getLogger('adass_subject_tagger')
 LOG.setLevel(logging.INFO)
 
-def find_terms (content:str)->list:
+def find_terms (content:str, ngrams_to_extract=(1,2,3))->list:
     '''
     Find NGRAMS of significance in passed text
+    will look for ngrams up to 3 words by default.
+    Returns a list of (term, frequency) tuples sorted by frequency
     '''
     import textacy
     import textacy.keyterms
@@ -34,19 +36,23 @@ def find_terms (content:str)->list:
     doc = textacy.Doc(text)
     LOG.debug(doc)
 
-    ngrams = list(textacy.extract.ngrams(doc, 3, filter_stops=True, filter_punct=True, filter_nums=False))
+    # ngrams = list(textacy.extract.ngrams(doc, 4, filter_stops=True, filter_punct=True, filter_nums=False))
     #LOG.debug(f'''NGRAMS: %s''', ngrams)
 
-    terms = textacy.keyterms.textrank(doc, normalize='lemma', n_keyterms=10)
-    LOG.debug(f'''KEYTERMS: %s''', terms)
+    # extract keyterms to make suggestions for new ADASS subject terms
+    keyterms = textacy.keyterms.textrank(doc, normalize='lemma', n_keyterms=10)
+    LOG.debug(f'''KEYTERMS: %s''', keyterms)
 
-    bot = doc.to_bag_of_terms(ngrams=(1, 2, 3, 4), named_entities=True, weighting='count', as_strings=True)
+    # We'll use the Bag of terms, ngrams by frequency, to find relevant matches with
+    # existing terms in the ADASS dictionary
+    bot = doc.to_bag_of_terms(ngrams=ngrams_to_extract, named_entities=True, weighting='count', as_strings=True)
     # For some reason we see stopwords in the BoT, so make another pass to clean out stopwords
     # and the empty string then print top 15 number of terms by occurance
     cleaned_bot = [(term, cnt) for term, cnt in bot.items() if term not in STOP_WORDS and term != '']
-    LOG.debug(f'''BAG of Terms (top, cleaned): %s''', sorted(cleaned_bot, key=lambda x: x[1], reverse=True)[:15])
+    sorted_cleaned_bot = sorted(cleaned_bot, key=lambda x: x[1], reverse=True)
+    LOG.debug(f'''BAG of Terms (top, cleaned): %s''', sorted_cleaned_bot[:15])
 
-    return ngrams
+    return {'ngrams' : sorted_cleaned_bot, 'keyterms' : keyterms}
 
 if __name__ == '__main__':
     import argparse
@@ -64,6 +70,7 @@ if __name__ == '__main__':
         LOG.setLevel(logging.DEBUG)
 
     terms = find_terms(opts.text)
-    LOG.info(terms)
+    #LOG.info(terms['keyterms'])
+    #LOG.info(terms['ngrams'])
 
     # TBD do something with these terms
