@@ -63,7 +63,7 @@ if __name__ == '__main__':
         logging.basicConfig(level=logging.DEBUG)
         LOG.setLevel(logging.DEBUG)
 
-    tags = find_terms(opts.text)
+    terms = find_terms(opts.text)
     LOG.info(terms)
 
     # TBD do something with these terms
