@@ -1,1 +1,2 @@
 textacy==0.6.2
+cld2-cffi==0.1.4
