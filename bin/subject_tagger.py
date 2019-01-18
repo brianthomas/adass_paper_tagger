@@ -3,10 +3,12 @@
     TeX/LaTeX control characters/formatting.
 '''
 import logging
+from tagger.data import *
 
 logging.basicConfig(level=logging.INFO)
 LOG = logging.getLogger('adass_subject_tagger')
 LOG.setLevel(logging.INFO)
+
 
 def find_terms (content:str, ngrams_to_extract=(1,2,3))->list:
     '''
@@ -69,7 +71,9 @@ if __name__ == '__main__':
         logging.basicConfig(level=logging.DEBUG)
         LOG.setLevel(logging.DEBUG)
 
-    terms = find_terms(opts.text)
+    print(ADASS_Subjects.keywords()) #[:20]) 
+    # terms = find_terms(opts.text)
+
     #LOG.info(terms['keyterms'])
     #LOG.info(terms['ngrams'])
 
