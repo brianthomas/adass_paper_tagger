@@ -23,7 +23,6 @@ class ADASS_Subjects(object):
     def _get_keywords_from_file (keyword_file:str)->list:
 
         file_to_open = Utility._find_file(keyword_file, '.')
-        print (file_to_open)
 
         # read and put subjects into order.
         # the format of the subjectKeywords.txt file is particularly gnarly,
@@ -62,6 +61,7 @@ class ADASS_Subjects(object):
             new_keyword = new_keyword[:-1]
 
             for term in new_keyword_list:
+                term = term.lower()
                 if term not in keywords:
                     keywords[term] = []
                 keywords[term].append(new_keyword)
@@ -72,7 +72,7 @@ class ADASS_Subjects(object):
         # pass 2: Fix keywords to remove acronyms from term which might match
         # but then add them back to the dict as aliases
         fixed_keywords = {}
-        for keyword in keywords:
+        for keyword in keywords.keys():
             m = ADASS_Subjects._ACRONYM_PATTERN.match(keyword)
             if m:
                 # we have an acronym, split off into 2 entries
