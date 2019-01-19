@@ -52,7 +52,7 @@ def find_terms (content:str, ngrams_to_extract=(1,2,3))->list:
     # and the empty string then print top 15 number of terms by occurance
     cleaned_bot = [(term, cnt) for term, cnt in bot.items() if term not in STOP_WORDS and term != '']
     sorted_cleaned_bot = sorted(cleaned_bot, key=lambda x: x[1], reverse=True)
-    LOG.debug(f'''BAG of Terms (top, cleaned): %s''', sorted_cleaned_bot[:15])
+    LOG.debug(f'''BAG of Terms (top, cleaned): %s''', sorted_cleaned_bot[:30])
 
     return {'ngrams' : sorted_cleaned_bot, 'keyterms' : keyterms}
 
@@ -81,25 +81,37 @@ if __name__ == '__main__':
     print (f'''Matching ADASS Keywords : ''')
     possible_matches = {}
 
+    # TODO : Tech debt
     # make a set of ngrams
-    ngram_keys_present = ( term for term, cnt in document_terms['ngrams'] )
-    
+    doc_ngrams = { term.lower() for term, cnt in document_terms['ngrams'] }
+    #LOG.debug(doc_ngrams)
+
     # go through list of ngrams. We generally want to see MOST
     # of the terms in the keyword present before suggestion
     for doc_ngram in document_terms['ngrams']:
         # do we have something which might match?
         # pull back a possible list of ADASS subject keywords
-        # for 'signifant' ngrams (e.g. more than 1 occurance perhaps?)
+        # for 'significant' ngrams (e.g. more than a few occurances perhaps?)
         if doc_ngram[1] < 2:
             continue
 
+        # now test if we have a match with any ADASS Subject keywords
         if doc_ngram[0] in ADASS_Subjects.keywords():
-            for adass_keyword in ADASS_Subjects.keywords()[doc_ngram[0]]:
-                #check a particular keyword
-                # answer the question of whether all of the components
-                # are present or not
-                for ngram_comp in adass_keyword.split(":"):
-                    if ngram_comp not in ngram_keys_present:
+            LOG.debug(f'''Testing doc_ngram: %s''', str(doc_ngram[0]))
+
+            # we have matched a grouping of keywords
+            # but they may not perfectly align (hah!), so lets break apart
+            # the ADASS Subject keyword grouping and see if all of the
+            # component parts will match, and if so, then we probably have
+            # a good choice
+            adass_keyword_group = ADASS_Subjects.keywords()[doc_ngram[0]]
+            for adass_keyword in adass_keyword_group:
+                # check a particular ADASS Subject keyword in the group
+                # and answer the question of whether all of the sub-components
+                # of that keyword are present or not.
+                # Split on the ':' in the keyword
+                for kw_comp in adass_keyword.lower().split(":"):
+                    if kw_comp not in doc_ngrams:
                         continue
 
                 # IF we get here in the loop then it looks like we
@@ -111,12 +123,19 @@ if __name__ == '__main__':
                 possible_matches[adass_keyword] += 1
 
     # based on ranking, print back out possible matches
+    strong_terms = []
+    weak_terms = []
     for tup in possible_matches.items():
         # rule of thumb is if we have more occurances as number of ':'
         # in the term then it *might* be a match
-        if tup[1] > tup[0].count(":"):
-            print (tup)
 
-    print (f'''Suggested Terms :\n''', document_terms['keyterms'])
+        if tup[1] > tup[0].count(":"):
+            strong_terms.append(tup[0])
+        elif tup[1] > tup[0].count(":")-1:
+            weak_terms.append(tup[0])
+
+    print (f'''Suggested ADASS Subjects:\n''', strong_terms)
+    print (f'''Weakly Suggested ADASS Subjects:\n''', weak_terms)
+    print (f'''Suggested KeyTerms (to add to subjects) :\n''', document_terms['keyterms'])
 
     # FIN
