@@ -1,6 +1,10 @@
+#!/usr/bin/env python
+
 ''' Find possible tags from text content with ADASS subject tags
     Input context is assumed to have had "detex" run on them already to remove
     TeX/LaTeX control characters/formatting.
+
+    This program requires Python3
 '''
 import logging
 from tagger.data import *
