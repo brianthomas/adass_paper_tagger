@@ -26,6 +26,8 @@ set your CFLAGS environment variable to contain '-Wno-narrowing'
 Note: you need to set PYTHONPATH to the top level directory (see above in Installation).
 
 Optional arguments include:
+
+```bash
   -h, --help            show this help message and exit
   -d, --debug           Apply debuging output if used
   -j, --json_output     Use json output if used
@@ -33,6 +35,7 @@ Optional arguments include:
                         input
   -m MAX_SUGGESTED_TERMS, --max_suggested_terms MAX_SUGGESTED_TERMS
                         Maximum number of suggested terms. Default is 15
+```
 
 I use standard input and detex to feed papers, for example:
 
