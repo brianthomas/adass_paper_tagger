@@ -19,8 +19,20 @@ set your CFLAGS environment variable to contain '-Wno-narrowing'
 (see issue https://github.com/GregBowyer/cld2-cffi/issues/21 for more details) 
 
 ```bash
+# create virtual environment
 > virtualenv -p python3 ./venv
+
+# activate virtual python environment
+# (you may need different activate depending on your shell, the one below is for /bin/sh)
 > source venv/bin/activate
+
+# install dependencies
+> pip install -r requirements.txt
+
+# install English language model 
+> python -m spacy download en 
+
+# make local module in pythonpath 
 > set PYTHONPATH=`pwd`
 
 ```
