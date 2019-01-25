@@ -37,7 +37,8 @@ set CFLAGS='-Wno-narrowing'
 > python -m spacy download en 
 
 # make local module in pythonpath 
-> set PYTHONPATH=`pwd`
+# (again shell dependent, below for bash)
+> export PYTHONPATH=`pwd`
 
 ```
 
