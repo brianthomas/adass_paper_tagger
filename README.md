@@ -11,8 +11,14 @@ It also has the ability to suggest terms which should be added to the ADASS dict
 
 ## Installation
 
+This project has submodules, so you should be sure to use the '--recurse-submodules' flag
+when cloning, e.x.
+
+```bash
+> git clone --recurse-submodules https://github.com/brianthomas/adass_subject_recommender.git  
+``` 
 This software requires Python 3 (built with 3.7). You should install a virtual environment 
-such as 'virtualenv' and install the requirements.
+such as 'virtualenv' and install the requirements (see below).
 
 NOTE: IF you have gcc8 or newer, then the cld2-cffi dependency will not install and you should 
 set your CFLAGS environment variable to contain '-Wno-narrowing' 
@@ -35,6 +41,11 @@ set CFLAGS='-Wno-narrowing'
 
 # install English language model 
 > python -m spacy download en 
+
+# IF you forgot to use '--recurse-submodules' flag when you cloned 
+# then now lets initialize and checkout submodule contents
+git submodule init
+git submodule update
 
 # make local module in pythonpath 
 # (again shell dependent, below for bash)
