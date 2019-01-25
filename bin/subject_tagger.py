@@ -40,9 +40,12 @@ def find_terms (content:str, ngrams_to_extract=(1,2,3))->list:
     #lang_en = spacy.util.get_lang_class('en')
     doc = textacy.Doc(text)
     LOG.debug(doc)
-
-    # ngrams = list(textacy.extract.ngrams(doc, 3, filter_stops=True, filter_punct=True, filter_nums=False))
-    #LOG.debug(f'''NGRAMS: %s''', ngrams)
+    '''
+    for token in doc:
+        if token.text != token.lemma_:
+            print('Original : %s, New: %s' % (token.text, token.lemma_))
+    print (list(doc.spacy_doc.ents))
+    '''
 
     # extract keyterms to make suggestions for new ADASS subject terms
     keyterms = textacy.keyterms.textrank(doc, normalize='lemma', n_keyterms=10)
@@ -50,7 +53,7 @@ def find_terms (content:str, ngrams_to_extract=(1,2,3))->list:
 
     # We'll use the Bag of terms, ngrams by frequency, to find relevant matches with
     # existing terms in the ADASS dictionary
-    bot = doc.to_bag_of_terms(ngrams=ngrams_to_extract, named_entities=True, weighting='count', as_strings=True)
+    bot = doc.to_bag_of_terms(ngrams=ngrams_to_extract, lemmatize=True, named_entities=True, weighting='count', as_strings=True)
 
     # For some reason we see stopwords in the BoT, so make another pass to clean out stopwords
     # and the empty string then print top 15 number of terms by occurance
@@ -60,30 +63,15 @@ def find_terms (content:str, ngrams_to_extract=(1,2,3))->list:
 
     return {'ngrams' : sorted_cleaned_bot, 'keyterms' : keyterms}
 
-if __name__ == '__main__':
-    import argparse
-    import sys
-
-    ap = argparse.ArgumentParser(description='ADASS Conference Paper Subject Tagger')
-    ap.add_argument('-d', '--debug', default = False, action = 'store_true')
-    ap.add_argument('-t', '--text', type=str, help= 'Text to find subject tags for, defaults to standard input', default=sys.stdin)
-
-    # parse argv
-    opts = ap.parse_args()
-
-    if opts.debug:
-        logging.basicConfig(level=logging.DEBUG)
-        LOG.setLevel(logging.DEBUG)
-
-    # WAY too verbose
-    #LOG.debug(ADASS_Subjects.keywords())
+def find_subject_terms(text_to_search) -> dict:
 
     # pull and then compare document terms
     # to what we have in the dictionary
-    document_terms = find_terms(opts.text)
+    document_terms = find_terms(text_to_search)
 
     print (f'''Matching ADASS Keywords : ''')
     possible_matches = {}
+    strong_matches = {}
 
     # TODO : Tech debt
     # make a set of ngrams
@@ -110,36 +98,81 @@ if __name__ == '__main__':
             # a good choice
             adass_keyword_group = ADASS_Subjects.keywords()[doc_ngram[0]]
             for adass_keyword in adass_keyword_group:
+
+                # Split on the ':' in the keyword
+                # to get ADASS keyword term/components
+                adass_keyword_terms = adass_keyword.lower().split(":")
+                first_term = adass_keyword_terms.pop()
+
                 # check a particular ADASS Subject keyword in the group
                 # and answer the question of whether all of the sub-components
                 # of that keyword are present or not.
-                # Split on the ':' in the keyword
-                for kw_comp in adass_keyword.lower().split(":"):
+
+                is_a_match = True
+                is_a_strong_match = False
+                # check against lower terms
+                for kw_comp in adass_keyword_terms:
                     if kw_comp not in doc_ngrams:
-                        continue
+                        is_a_match = False
 
-                # IF we get here in the loop then it looks like we
-                # have matched all of the terms
-                if adass_keyword not in possible_matches:
-                    possible_matches[adass_keyword] = 0
+                if is_a_match and first_term in doc_ngrams:
+                    is_a_strong_match = True
 
-                # lets score by number of times ngram is found in text
-                possible_matches[adass_keyword] += 1
+                if is_a_match:
+                    # IF we get here in the loop then it looks like we
+                    # have matched all of the terms
+                    if adass_keyword not in possible_matches:
+                        possible_matches[adass_keyword] = 0
+
+                    # lets score by number of times ngram is found in text
+                    possible_matches[adass_keyword] += 1
+
+                if is_a_strong_match:
+                    if adass_keyword not in strong_matches:
+                        strong_matches[adass_keyword] = 0
+
+                    strong_matches[adass_keyword] += 1
 
     # based on ranking, print back out possible matches
     strong_terms = []
     weak_terms = []
     for tup in possible_matches.items():
-        # rule of thumb is if we have more occurances as number of ':'
-        # in the term then it *might* be a match
-
-        if tup[1] > tup[0].count(":"):
-            strong_terms.append(tup[0])
-        elif tup[1] > tup[0].count(":")-1:
+        # rule of thumb is if we have 3 or more occurances
+        # in the term then its probably strongly suggested
+        if tup[1] > 3:
             weak_terms.append(tup[0])
 
-    print (f'''Suggested ADASS Subjects:\n''', strong_terms)
-    print (f'''Weakly Suggested ADASS Subjects:\n''', weak_terms)
-    print (f'''Suggested KeyTerms (to add to subjects) :\n''', document_terms['keyterms'])
+    for tup in strong_matches.items():
+        if tup[1] > 3:
+            strong_terms.append(tup[0])
+        else:
+            weak_terms.append(tup[0])
+
+    return { 'adass_terms' : strong_terms, 'adass_weak_terms' : weak_terms, 'suggested_terms' : document_terms['keyterms']}
+
+if __name__ == '__main__':
+    import argparse
+    import sys
+    import json
+
+    ap = argparse.ArgumentParser(description='ADASS Conference Paper Subject Tagger')
+    ap.add_argument('-d', '--debug', default = False, action = 'store_true')
+    ap.add_argument('-t', '--text', type=str, help= 'Text to find subject tags for, defaults to standard input', default=sys.stdin)
+
+    # parse argv
+    opts = ap.parse_args()
+
+    if opts.debug:
+        logging.basicConfig(level=logging.DEBUG)
+        LOG.setLevel(logging.DEBUG)
+
+    subjects = find_subject_terms (opts.text)
+    print(json.dumps(subjects, indent=4, sort_keys=True))
+
+    """
+    print (f'''Suggested ADASS Subjects:\n''', subjects['strong_terms'])
+    print (f'''Weakly Suggested ADASS Subjects:\n''', subjects['weak_terms'])
+    print (f'''Suggested KeyTerms (to add to subjects) :\n''', subjects['keyterms'])
+    """
 
     # FIN
