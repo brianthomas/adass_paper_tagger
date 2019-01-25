@@ -26,6 +26,10 @@ set your CFLAGS environment variable to contain '-Wno-narrowing'
 # (you may need different activate depending on your shell, the one below is for /bin/sh)
 > source venv/bin/activate
 
+# Optional need for those with gcc8 or higher
+# (shell dependent, below command for bash)
+set CFLAGS='-Wno-narrowing'
+
 # install dependencies
 > pip install -r requirements.txt
 
