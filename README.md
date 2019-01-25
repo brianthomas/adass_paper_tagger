@@ -44,7 +44,7 @@ Optional arguments include:
 I use standard input and detex to feed papers, for example:
 
 ```bash
-> detex ../ADASSProceedings2018/papers/P1-6/P1-6.tex | python bin/subject_tagger.py -j -m 5
+> detex ../ADASSProceedings2018/papers/P1-6/P1-6.tex | python bin/find_subjects.py -j -m 5
 {
     "adass_terms": [],
     "adass_weak_terms": [

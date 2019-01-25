@@ -1,16 +1,19 @@
 #!/usr/bin/env python
 
-''' Find possible tags from text content with ADASS subject tags
+''' Find possible subject erms from text content in an ADASS Proceedings paper.
+    The software will consider ADASS subject dicionary terms as well as suggest
+    new terms which are missing.
+
     Input context is assumed to have had "detex" run on them already to remove
     TeX/LaTeX control characters/formatting.
 
     This program requires Python3
 '''
 import logging
-from tagger.data import *
+from recommender.data import *
 
 logging.basicConfig(level=logging.INFO)
-LOG = logging.getLogger('adass_subject_tagger')
+LOG = logging.getLogger('subject_rec')
 LOG.setLevel(logging.INFO)
 
 MAX_BOT_TERMS = 30

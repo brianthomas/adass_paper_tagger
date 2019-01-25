@@ -1,10 +1,10 @@
 
-from bin.subject_tagger import * 
+from bin.find_subjects import * 
 import unittest
 import logging
 
 logging.basicConfig(level=logging.DEBUG)
-logging.getLogger('tagger').setLevel(logging.DEBUG)
+logging.getLogger('subject_rec').setLevel(logging.DEBUG)
 LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.DEBUG)
 
