@@ -20,9 +20,9 @@ class ADASS_Subjects(object):
     _KEYWORDS = None
     _ACRONYM_PATTERN = re.compile("(.*)\s+\((\w+)\)\s*")
 
-    def _get_keywords_from_file (keyword_file:str)->list:
+    def _get_keywords_from_file (keyword_file:str)->dict:
 
-        file_to_open = Utility._find_file(keyword_file, '.')
+        file_to_open = Utility._find_file(keyword_file, 'ADASSProceedings')
 
         # read and put subjects into order.
         # the format of the subjectKeywords.txt file is particularly gnarly,
@@ -83,8 +83,17 @@ class ADASS_Subjects(object):
 
         return fixed_keywords
 
-    def keywords(keyword_file:str ='subjectKeywords.txt') -> list:
+    def _merge_dicts (dict1:dict, dict2:dict)-> dict:
+        # Yes, python 3.5+ has special sauce for htis, but it doesnt easily work here
+        # lets just make a method and be done with it
+        new_dict = dict1.copy()   # start with dict1's keys and values
+        new_dict.update(dict2)    # modifies new_dict with dict2's keys and values & returns None
+        return new_dict
+
+    def keywords(keyword_files:list=['subjectKeywords.txt', 'newKeywords.txt']) -> list:
         if ADASS_Subjects._KEYWORDS == None:
-            ADASS_Subjects._KEYWORDS = ADASS_Subjects._get_keywords_from_file(keyword_file)
+            ADASS_Subjects._KEYWORDS = {} 
+            for keyword_file in keyword_files:
+                ADASS_Subjects._KEYWORDS = ADASS_Subjects._merge_dicts(ADASS_Subjects._KEYWORDS, ADASS_Subjects._get_keywords_from_file(keyword_file))
 
         return ADASS_Subjects._KEYWORDS

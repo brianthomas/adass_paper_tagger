@@ -1,0 +1,4 @@
+[submodule "ADASSProceedings"]
+	path = ADASSProceedings
+	url = https://github.com/astroumd/ADASSProceedings
+	branch = 2018
