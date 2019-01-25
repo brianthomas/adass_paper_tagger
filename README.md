@@ -3,6 +3,10 @@
 ## About
 A quick and dirty subject tagger for ADASS papers using the ADASS dictionary. It will attempt
 to match terms from the ADASS dictionary with those extracted from an ADASS proceedings paper.
+It provides back output with 2 groupings of ADASS subject terms those which are 'weakly' suggested
+and 'strongly' suggested terms. It makes this determination purely on the number of occurances 
+of the terms within the document.
+
 It also has the ability to suggest terms which should be added to the ADASS dictionary.
 
 ## Installation
