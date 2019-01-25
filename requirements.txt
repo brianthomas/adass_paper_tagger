@@ -1,2 +1,5 @@
 textacy==0.6.2
 cld2-cffi==0.1.4
+# testing reqs
+nose==1.3.7
+coverage==4.5.2
