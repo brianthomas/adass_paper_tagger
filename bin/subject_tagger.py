@@ -13,7 +13,10 @@ logging.basicConfig(level=logging.INFO)
 LOG = logging.getLogger('adass_subject_tagger')
 LOG.setLevel(logging.INFO)
 
-def find_terms (content:str, ngrams_to_extract=(1,2,3))->list:
+MAX_BOT_TERMS = 30
+MAX_SUGGESTED_KEYTERMS = 15
+
+def find_terms (content:str, maxterms=MAX_SUGGESTED_KEYTERMS, ngrams_to_extract=(1,2,3))->list:
     '''
     Find NGRAMS of significance in passed text
     will look for ngrams up to 3 words by default.
@@ -40,15 +43,9 @@ def find_terms (content:str, ngrams_to_extract=(1,2,3))->list:
     #lang_en = spacy.util.get_lang_class('en')
     doc = textacy.Doc(text)
     LOG.debug(doc)
-    '''
-    for token in doc:
-        if token.text != token.lemma_:
-            print('Original : %s, New: %s' % (token.text, token.lemma_))
-    print (list(doc.spacy_doc.ents))
-    '''
 
     # extract keyterms to make suggestions for new ADASS subject terms
-    keyterms = textacy.keyterms.textrank(doc, normalize='lemma', n_keyterms=10)
+    keyterms = textacy.keyterms.textrank(doc, normalize='lemma', n_keyterms=maxterms)
     LOG.debug(f'''KEYTERMS: %s''', keyterms)
 
     # We'll use the Bag of terms, ngrams by frequency, to find relevant matches with
@@ -59,17 +56,16 @@ def find_terms (content:str, ngrams_to_extract=(1,2,3))->list:
     # and the empty string then print top 15 number of terms by occurance
     cleaned_bot = [(term, cnt) for term, cnt in bot.items() if term not in STOP_WORDS and term != '']
     sorted_cleaned_bot = sorted(cleaned_bot, key=lambda x: x[1], reverse=True)
-    LOG.debug(f'''BAG of Terms (top, cleaned): %s''', sorted_cleaned_bot[:30])
+    LOG.debug(f'''BAG of Terms (top, cleaned): %s''', sorted_cleaned_bot[:MAX_BOT_TERMS])
 
     return {'ngrams' : sorted_cleaned_bot, 'keyterms' : keyterms}
 
-def find_subject_terms(text_to_search) -> dict:
+def find_subject_terms(text_to_search:str, max_terms:int) -> dict:
 
     # pull and then compare document terms
     # to what we have in the dictionary
-    document_terms = find_terms(text_to_search)
+    document_terms = find_terms(text_to_search, max_terms)
 
-    print (f'''Matching ADASS Keywords : ''')
     possible_matches = {}
     strong_matches = {}
 
@@ -156,8 +152,10 @@ if __name__ == '__main__':
     import json
 
     ap = argparse.ArgumentParser(description='ADASS Conference Paper Subject Tagger')
-    ap.add_argument('-d', '--debug', default = False, action = 'store_true')
+    ap.add_argument('-d', '--debug', default = False, action = 'store_true', help="Apply debuging output if used")
+    ap.add_argument('-j', '--json_output', default = False, action = 'store_true', help="Use json output if used")
     ap.add_argument('-t', '--text', type=str, help= 'Text to find subject tags for, defaults to standard input', default=sys.stdin)
+    ap.add_argument('-m', '--max_suggested_terms', type=int, default=MAX_SUGGESTED_KEYTERMS, help= 'Maximum number of suggested terms. Default is '+str(MAX_SUGGESTED_KEYTERMS))
 
     # parse argv
     opts = ap.parse_args()
@@ -166,13 +164,13 @@ if __name__ == '__main__':
         logging.basicConfig(level=logging.DEBUG)
         LOG.setLevel(logging.DEBUG)
 
-    subjects = find_subject_terms (opts.text)
-    print(json.dumps(subjects, indent=4, sort_keys=True))
+    subjects = find_subject_terms (opts.text, opts.max_suggested_terms)
 
-    """
-    print (f'''Suggested ADASS Subjects:\n''', subjects['strong_terms'])
-    print (f'''Weakly Suggested ADASS Subjects:\n''', subjects['weak_terms'])
-    print (f'''Suggested KeyTerms (to add to subjects) :\n''', subjects['keyterms'])
-    """
+    if (opts.json_output):
+        print(json.dumps(subjects, indent=4, sort_keys=True))
+    else:
+        print (f'''Suggested ADASS Subjects:\n''', subjects['adass_terms'])
+        print (f'''Weakly Suggested ADASS Subjects:\n''', subjects['adass_weak_terms'])
+        print (f'''Suggested KeyTerms (to add to subjects) :\n''', subjects['suggested_terms'])
 
     # FIN
