@@ -133,21 +133,20 @@ def find_subject_terms(text_to_search:str, max_terms:int) -> dict:
                     strong_matches[adass_keyword] += 1
 
     # based on ranking, print back out possible matches
-    strong_terms = []
-    weak_terms = []
+    adass_terms = {}
     for tup in possible_matches.items():
         # rule of thumb is if we have 3 or more occurances
         # in the term then its probably strongly suggested
         if tup[1] > 3:
-            weak_terms.append(tup[0])
+            adass_terms[tup[0]] = 'Low probability'
 
     for tup in strong_matches.items():
         if tup[1] > 3:
-            strong_terms.append(tup[0])
+            adass_terms[tup[0]] = 'High probability'
         else:
-            weak_terms.append(tup[0])
+            adass_terms[tup[0]] = 'Moderate probability'
 
-    return { 'adass_terms' : strong_terms, 'adass_weak_terms' : weak_terms, 'suggested_terms' : document_terms['keyterms']}
+    return { 'adass_terms' : adass_terms, 'suggested_terms' : document_terms['keyterms']}
 
 if __name__ == '__main__':
     import argparse
@@ -173,7 +172,6 @@ if __name__ == '__main__':
         print(json.dumps(subjects, indent=4, sort_keys=True))
     else:
         print (f'''Suggested ADASS Subjects:\n''', subjects['adass_terms'])
-        print (f'''Weakly Suggested ADASS Subjects:\n''', subjects['adass_weak_terms'])
         print (f'''Suggested KeyTerms (to add to subjects) :\n''', subjects['suggested_terms'])
 
     # FIN
