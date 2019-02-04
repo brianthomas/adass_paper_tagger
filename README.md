@@ -47,10 +47,6 @@ set CFLAGS='-Wno-narrowing'
 git submodule init
 git submodule update
 
-# make local module in pythonpath 
-# (again shell dependent, below for bash)
-> export PYTHONPATH=`pwd`
-
 ```
 
 ## Usage
