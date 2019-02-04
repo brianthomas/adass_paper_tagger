@@ -62,7 +62,7 @@ class ADASS_Subjects(object):
             new_keyword_list = working_parents + [content]
             new_keyword = ""
             for item in new_keyword_list:
-                new_keyword += item + ":"
+                new_keyword += item + "!"
             new_keyword = new_keyword[:-1]
 
             for term in new_keyword_list:
@@ -198,7 +198,7 @@ def find_subject_terms(text_to_search:str, max_terms:int) -> dict:
 
                 # Split on the ':' in the keyword
                 # to get ADASS keyword term/components
-                adass_keyword_terms = adass_keyword.lower().split(":")
+                adass_keyword_terms = adass_keyword.lower().split("!")
                 first_term = adass_keyword_terms.pop()
 
                 # check a particular ADASS Subject keyword in the group
